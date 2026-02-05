@@ -17,14 +17,22 @@ class FileOrganizer:
             "Music": [".mp3", ".wav", ".wma", ".msv"]
         }
     
-
+    #Only organizes current directory, avoids user unfamiliarity with file paths
     def organizer(self):
-        print(self.types_dict)
 
         curr_dir = Path('.')
 
         for index, entry in enumerate(curr_dir.iterdir()):
-            print(f"File No:  {index}: {entry}")
+           #DEBUG ONLY: print(f"File No:  {index + 1}: {entry.name}. Is_Dir: {entry.is_dir()}")
+        
+            try:
+                extension = entry.name    
+           
+            except:
+                print("An exception occurred while parsing file {entry.name}. Could not complete organization of files.")
+                return
+        
+        return
         
         
 if __name__ == '__main__':
