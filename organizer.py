@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 from pathlib import Path
 import argparse
 
@@ -18,10 +19,12 @@ class FileOrganizer:
             "Music": [".mp3", ".wav", ".wma", ".msv"]
         }
 
-        self.safety_off = False
+        self.safety_mode = True
     
     #Only organizes current directory, avoids user unfamiliarity with file paths
     def organizer(self, safety_var):
+
+        self.safety_mode = safety_var
 
         curr_dir = Path('.')
 
@@ -30,6 +33,10 @@ class FileOrganizer:
         
             try:
                 
+                #Avoid messages for the program itself
+                if(entry.name == sys.argv[0]):
+                    continue
+
                 if(entry.is_dir()):
                     continue
 
@@ -54,22 +61,25 @@ class FileOrganizer:
                 else:
                     checked_path = selected_folder + "/" + entry.name
                     if Path(checked_path).exists():
-                        print(f"WARNING: \"{checked_path}\" already exists in folder \"{selected_folder}\". " 
-                        f"Would you like to overwrite the existing file?"
-                         "\nY/N")
-                        answer_flag = False
-                        while(not answer_flag):
-                            answer = input()
-                            answer = str.lower(answer)
-                            if answer in ["yes", "y"]:
-                                answer_flag = True
-                                print("Confirmed. Replacing file.")
-                                Path(entry.name).replace(checked_path)
-                            elif answer in ["no", "n"]:
-                                answer_flag = True
-                                print("File replacement aborted.")
-                            else:
-                                print("Could not parse answer. Please answer Y/N.")
+                        if(self.safety_mode):
+                            print(f"WARNING: \"{checked_path}\" already exists in folder \"{selected_folder}\". " 
+                            f"Would you like to overwrite the existing file?"
+                            "\nY/N")
+                            answer_flag = False
+                            while(not answer_flag):
+                                answer = input()
+                                answer = str.lower(answer)
+                                if answer in ["yes", "y"]:
+                                    answer_flag = True
+                                    print("Confirmed. Replacing file.")
+                                    Path(entry.name).replace(checked_path)
+                                elif answer in ["no", "n"]:
+                                    answer_flag = True
+                                    print("File replacement aborted.")
+                                else:
+                                    print("Could not parse answer. Please answer Y/N.")
+                        else:
+                            Path(entry.name).replace(checked_path)
 
                     else:
                         if not Path(selected_folder).exists():
@@ -84,13 +94,21 @@ class FileOrganizer:
             except Exception as e:
                 print(f"An exception occurred while parsing file {entry.name}. Could not complete organization of files. Program terminating.")
                 print(e)
-                return
+                sys.exit(1)
         
         return
         
         
 if __name__ == '__main__':
     my_organizer = FileOrganizer()
-    #parser = argparse.ArgumentParser()
-    print("This is a simple file organizer program. Please use the -h flag for more information.\n")
-    my_organizer.organizer(False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-u', '--unsafe', help= "Enables unsafe mode. Helpful for automation or if you're not worried about overwriting files", action= 'store_true')
+    args = parser.parse_args()
+
+    if args.unsafe:
+        print("Running in Unsafe Mode (no file overwrite prompts).")
+        my_organizer.organizer(False)
+    else:
+        print("Running in Safe Mode (file overwrite prompts).")
+        my_organizer.organizer(True)
+    
